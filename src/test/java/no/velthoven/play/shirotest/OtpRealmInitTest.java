@@ -37,7 +37,7 @@ public class OtpRealmInitTest {
     @Test
     public void simpleTest() {
         Subject subject = SecurityUtils.getSubject();
-        subject.login(new TestToken("cccccceijfdg", "blabla", "cccccceijfdgithrchduddndhdcnibjfgvtcbherednt" +
+        subject.login(new TestToken("cccccceijfdg", "blabla", "cccccceijfdgkvrjdrlenudtbkklrkfigfikecnrlduh" +
             ""));
 
         Assert.assertTrue("subject is not authenticated", subject.isAuthenticated());
