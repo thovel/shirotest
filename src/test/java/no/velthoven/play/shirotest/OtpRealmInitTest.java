@@ -6,9 +6,13 @@ import java.util.List;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.authz.ModularRealmAuthorizer;
 import org.apache.shiro.authz.permission.WildcardPermission;
 import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.realm.Realm;
+import org.apache.shiro.realm.ldap.JndiLdapContextFactory;
+import org.apache.shiro.realm.ldap.JndiLdapRealm;
+import org.apache.shiro.realm.ldap.LdapContextFactory;
 import org.apache.shiro.realm.text.IniRealm;
 import org.apache.shiro.subject.Subject;
 import org.junit.Assert;
@@ -20,7 +24,8 @@ import no.velthoven.lib.shiroyubikey.OtpRealm;
 import no.velthoven.lib.shiroyubikey.OtpToken;
 
 /**
- * Created by thomas on 06.12.15.
+ * ldapsearch -x -LLL -H ldap://localhost:3389 -b dc=oms uid=thomas
+ * ldapwhoami -x -h localhost -p 3389 -D "uid=thomas,dc=oms" -W
  */
 public class OtpRealmInitTest {
     @BeforeClass
@@ -29,9 +34,20 @@ public class OtpRealmInitTest {
 
         realms.add(new OtpRealm());
         realms.add(new IniRealm("classpath:shiro.ini"));
+        realms.add(createLdapRealm());
         realms.add(new TestAuthorizer());
 
         SecurityUtils.setSecurityManager(new DefaultSecurityManager(realms));
+    }
+
+    private static Realm createLdapRealm() {
+
+        JndiLdapContextFactory lcf = new JndiLdapContextFactory();
+        lcf.setUrl("ldap://localhost:3389");
+        JndiLdapRealm nlr = new JndiLdapRealm();
+        nlr.setContextFactory(lcf);
+        nlr.setUserDnTemplate("uid={0},dc=oms");
+        return nlr;
     }
 
     @Test
@@ -43,9 +59,9 @@ public class OtpRealmInitTest {
         Subject subject = SecurityUtils.getSubject();
 
         // Thomas
-        yubikeyId = "cccccceijfdg";
-        subject.login(new TestToken(yubikeyId, "blabla", "cccccceijfdgbkdunjnuecjgvhfvhbliifcunuhuddui" +
-            ""));
+        /*yubikeyId = "cccccceijfdg";
+        subject.login(new TestToken(yubikeyId, "blabla", "cccccceijfdgivlktreugfegvcjlrttugenvvbguiuue" +
+            ""))*/
 
         // Espen
         /*yubikeyId = "cccccceildcl";
@@ -53,7 +69,7 @@ public class OtpRealmInitTest {
             ""));*/
 
         // no otp
-        //subject.login(new UsernamePasswordToken("cccccceijfdg", "blabla"));
+        subject.login(new UsernamePasswordToken("thomas", "tioL!dnt5"));
 
         Assert.assertTrue("subject is not authenticated", subject.isAuthenticated());
         boolean found = false;
